@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { useState } from "react";
 import { formType } from "../types/types";
 
@@ -7,17 +7,30 @@ export default function useLocalStorage(
     name: string,
     defValue: formType[],
 ): [formType[], React.Dispatch<React.SetStateAction<formType[]>>] {
-    function getInitValue() {
-        const savedList = localStorage.getItem(name);
-        savedList ? console.log(1) : console.log(0)
-        
-        console.log(savedList);
-        return savedList ? (JSON.parse(savedList) as formType[]) : null;
-    }
+    const [list, setList] = useState<formType[]>(defValue);
 
-    const [list, setList] = useState<formType[]>(
-        () => getInitValue() || defValue,
+    const subscribe = (callback: () => void) => {
+        window.addEventListener("storage", callback);
+        return () => window.removeEventListener("storage", callback);
+    };
+
+    const getSnapshot = (): string | null => {
+        return localStorage.getItem(name);
+    };
+
+    const getServerSnapshot = (): string => {
+        return JSON.stringify(defValue);
+    };
+
+    const storageList = useSyncExternalStore(
+        subscribe,
+        getSnapshot,
+        getServerSnapshot,
     );
+    //TODO: figure out how to interact with localStorage normally
+    const tasks = useMemo(() => {
+        return storageList ? JSON.parse(storageList) : defValue;
+    }, [storageList]);
 
     useEffect(() => {
         localStorage.setItem(name, JSON.stringify(list));
