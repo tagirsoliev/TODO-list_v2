@@ -1,5 +1,5 @@
 import { Button, Card, Chip } from "@heroui/react";
-import type { formType } from "@/app/types/types";
+import type { Task } from "@/app/types/types";
 
 const typeLabels: Record<string, string> = {
     work: "Работа",
@@ -8,7 +8,7 @@ const typeLabels: Record<string, string> = {
 };
 
 interface TasksListProps {
-    tasks: formType[];
+    tasks: Task[];
     filter: string;
     type: string;
     deleteTask: (id: number) => void;
@@ -89,7 +89,7 @@ export default function TasksList({ tasks, filter, type, deleteTask, changeStatu
             {displayedTasks.map((task) => (
                 <TaskItem
                     key={task.id}
-                    id={task.id!}
+                    id={task.id}
                     value={task.value}
                     type={task.type}
                     isDone={task.isDone}

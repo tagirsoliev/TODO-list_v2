@@ -4,7 +4,7 @@ import type { SelectOption } from "@/app/types/types";
 
 interface SelectFieldProps {
     items: SelectOption[];
-    selectedKey: string;
+    value: string;
     onChange: (key: string) => void;
     className?: string;
     "aria-label"?: string;
@@ -12,7 +12,7 @@ interface SelectFieldProps {
 
 export default function SelectField({
     items,
-    selectedKey,
+    value,
     onChange,
     className,
     "aria-label": ariaLabel,
@@ -21,8 +21,8 @@ export default function SelectField({
         <Select
             aria-label={ariaLabel}
             className={className}
-            selectedKey={selectedKey}
-            onSelectionChange={(key) => onChange(String(key))}
+            value={value}
+            onChange={(key) => onChange(String(key))}
         >
             <Select.Trigger>
                 <Select.Value />

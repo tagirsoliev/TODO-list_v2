@@ -1,19 +1,20 @@
 "use client";
 import { useState } from "react";
 import useLocalStorage from "./hooks/useLocalStorage";
-import { formType } from "./types/types";
+import { TaskDraft } from "./types/types";
 import TasksStats from "@/components/TasksStats";
 import TaskForm from "@/components/TaskForm";
-import TaskFilters from "@/components/TaskFilters";
+import SelectField from "@/components/SelectField";
 import TasksList from "@/components/TasksList";
-import ClearTasksButton from "@/components/ClearTasksButton";
+import { Button } from "@heroui/react";
+import { FILTER_OPTIONS, TYPE_FILTER_OPTIONS } from "@/constants/constants";
 
 export default function Home() {
     const [tasks, setTasks] = useLocalStorage("tasks", []);
-    const [filter, setFilter] = useState<string>("none");
-    const [type, setType] = useState<string>("all");
+    const [filter, setFilter] = useState<string>("");
+    const [type, setType] = useState<string>("");
 
-    const addTask = (task: formType) => {
+    const addTask = (task: TaskDraft) => {
         setTasks((prev) => [...prev, { ...task, id: Date.now() }]);
     };
 
@@ -34,17 +35,31 @@ export default function Home() {
     };
 
     return (
-        // TODO: Move components and add the ability to reuse them
-        //TODO: Write comments
         <main className="flex flex-col gap-6">
+
             <TasksStats tasks={tasks} />
+
             <TaskForm onAdd={addTask} />
-            <TaskFilters
-                filter={filter}
-                type={type}
-                onFilterChange={setFilter}
-                onTypeChange={setType}
-            />
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+                {/* Filters */}
+                <SelectField
+                    aria-label="Фильтр по статусу"
+                    className="sm:flex-1"
+                    items={FILTER_OPTIONS}
+                    value={filter}
+                    onChange={setFilter}
+                />
+
+                <SelectField
+                    aria-label="Фильтр по типу"
+                    className="sm:flex-1"
+                    items={TYPE_FILTER_OPTIONS}
+                    value={type}
+                    onChange={setType}
+                />
+            </div>
+
             <TasksList
                 tasks={tasks}
                 filter={filter}
@@ -52,7 +67,10 @@ export default function Home() {
                 deleteTask={deleteTask}
                 changeStatus={changeStatus}
             />
-            <ClearTasksButton onClear={clearTasks} />
+
+            <Button variant="outline" onPress={clearTasks}>
+                Очистить всё
+            </Button>
         </main>
     );
 }

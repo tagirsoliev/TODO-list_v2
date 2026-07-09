@@ -3,14 +3,14 @@ import { useState } from "react";
 import { Button, Card, Input } from "@heroui/react";
 import SelectField from "./SelectField";
 import { DEFAULT_TASK, TASK_TYPE_OPTIONS } from "@/constants/constants";
-import type { formType } from "@/app/types/types";
+import type { TaskDraft } from "@/app/types/types";
 
 interface TaskFormProps {
-    onAdd: (task: formType) => void;
+    onAdd: (task: TaskDraft) => void;
 }
 
 export default function TaskForm({ onAdd }: TaskFormProps) {
-    const [form, setForm] = useState<formType>(DEFAULT_TASK);
+    const [form, setForm] = useState<TaskDraft>(DEFAULT_TASK);
 
     const handleAdd = () => {
         if (form.value.trim() === "") return;
@@ -36,11 +36,11 @@ export default function TaskForm({ onAdd }: TaskFormProps) {
                         aria-label="Тип задачи"
                         className="sm:flex-1"
                         items={TASK_TYPE_OPTIONS}
-                        selectedKey={form.type === "" ? "none" : form.type}
+                        value={form.type}
                         onChange={(key) =>
                             setForm((prev) => ({
                                 ...prev,
-                                type: key === "none" ? "" : key,
+                                type: key,
                             }))
                         }
                     />

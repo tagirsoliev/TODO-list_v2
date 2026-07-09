@@ -1,8 +1,8 @@
 import { Card, ProgressBar } from "@heroui/react";
-import type { formType } from "@/app/types/types";
+import type { Task } from "@/app/types/types";
 
 interface TasksStatsProps {
-    tasks: formType[];
+    tasks: Task[];
 }
 
 export default function TasksStats({ tasks }: TasksStatsProps) {
