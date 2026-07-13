@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
-import ThemeSwitch from "@/components/ThemeSwitch";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -37,20 +38,11 @@ export default function RootLayout({
                     defaultTheme="system"
                     disableTransitionOnChange
                 >
-                    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
-                        <header className="flex items-center justify-between gap-4">
-                            <div>
-                                <h1 className="text-2xl font-semibold">
-                                    Список дел
-                                </h1>
-                                <p className="text-sm text-foreground/60">
-                                    Организуйте свой день
-                                </p>
-                            </div>
-                            <ThemeSwitch />
-                        </header>
+                    <SiteHeader />
+                    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
                         {children}
                     </div>
+                    <SiteFooter />
                 </ThemeProvider>
             </body>
         </html>

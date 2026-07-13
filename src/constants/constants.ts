@@ -26,3 +26,5 @@ export const TASK_TYPE_OPTIONS: SelectOption[] = [
     { id: "personal", name: "Личное" },
 ];
 
+export const CLIENT_ID = 8912721212;
+
