@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import useLocalStorage from "./hooks/useLocalStorage";
-import { TaskDraft } from "./types/types";
+import { TaskDraft } from "../types/types";
 import TasksStats from "@/components/TasksStats";
 import TaskForm from "@/components/TaskForm";
 import SelectField from "@/components/SelectField";
@@ -36,7 +36,6 @@ export default function Home() {
 
     return (
         <main className="flex flex-col gap-6">
-
             <TasksStats tasks={tasks} />
 
             <TaskForm onAdd={addTask} />

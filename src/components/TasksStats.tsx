@@ -1,5 +1,5 @@
 import { Card, ProgressBar } from "@heroui/react";
-import type { Task } from "@/app/types/types";
+import type { Task } from "@/types/types";
 
 interface TasksStatsProps {
     tasks: Task[];

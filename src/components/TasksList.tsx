@@ -1,5 +1,6 @@
 import { Button, Card, Chip } from "@heroui/react";
-import type { Task } from "@/app/types/types";
+import type { Task } from "@/types/types";
+// import api from "@/lib/api/api";
 
 const typeLabels: Record<string, string> = {
     work: "Работа",
@@ -64,6 +65,9 @@ function TaskItem({ id, value, type, isDone, deleteTask, changeStatus }: TaskIte
 }
 
 export default function TasksList({ tasks, filter, type, deleteTask, changeStatus }: TasksListProps) {
+
+    // const res = api("https://todo-backend-sigma-five.vercel.app/api/tasks", "GET", `Authorization: Bearer`)
+
     const filteredTasks =
         filter === "completed"
             ? tasks.filter((task) => task.isDone === true)

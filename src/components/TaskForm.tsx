@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button, Card, Input } from "@heroui/react";
 import SelectField from "./SelectField";
 import { DEFAULT_TASK, TASK_TYPE_OPTIONS } from "@/constants/constants";
-import type { TaskDraft } from "@/app/types/types";
+import type { TaskDraft } from "@/types/types";
 
 interface TaskFormProps {
     onAdd: (task: TaskDraft) => void;

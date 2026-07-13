@@ -1,4 +1,4 @@
-import { TaskDraft, SelectOption } from "@/app/types/types";
+import { TaskDraft, SelectOption } from "@/types/types";
 
 export const DEFAULT_TASK: TaskDraft = {
     value: "",
@@ -25,3 +25,4 @@ export const TASK_TYPE_OPTIONS: SelectOption[] = [
     { id: "study", name: "Учёба" },
     { id: "personal", name: "Личное" },
 ];
+

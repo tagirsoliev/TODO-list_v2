@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useMemo, useSyncExternalStore } from "react";
-import type { Task } from "../types/types";
+import type { Task } from "../../types/types";
 
 // Подписка на изменения localStorage: нативное событие "storage" приходит из
 // других вкладок, синтетическое — мы шлём его сами при записи в этой вкладке.
@@ -50,8 +50,7 @@ export default function useLocalStorage(
                     ? (action as (prev: Task[]) => Task[])(current)
                     : action;
             localStorage.setItem(name, JSON.stringify(next));
-            // Нативное "storage" событие срабатывает только в других вкладках,
-            // поэтому уведомляем подписчиков этой вкладки вручную.
+
             window.dispatchEvent(new StorageEvent("storage", { key: name }));
         },
         // defValue — константа по умолчанию

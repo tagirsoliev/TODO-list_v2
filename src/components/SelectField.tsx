@@ -1,6 +1,6 @@
 "use client";
 import { ListBox, Select } from "@heroui/react";
-import type { SelectOption } from "@/app/types/types";
+import type { SelectOption } from "@/types/types";
 
 interface SelectFieldProps {
     items: SelectOption[];
