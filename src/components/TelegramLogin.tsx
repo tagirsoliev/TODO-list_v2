@@ -2,32 +2,23 @@
 import { CLIENT_ID } from "@/constants/constants";
 import { useEffect } from "react";
 
-// Данные, которые Telegram отдаёт в колбэк после входа
+// Данные, которые Telegram передаёт в колбэк после входа (scope: openid profile).
 type TelegramAuthResult = {
     id_token?: string;
-    user?: {
-        id: number;
-        name?: string;
-        preferred_username?: string;
-        picture?: string;
-    };
     error?: string;
 };
 
-type TelegramLoginOptions = {
-    client_id: number;
-    scope?: Array<"profile" | "phone" | "write">;
-    lang?: string;
-    nonce?: string;
-};
-
-// Сообщаем TypeScript, что после загрузки скрипта в window появится Telegram
+// Виджет создаёт window.Telegram.Login после загрузки скрипта.
 declare global {
     interface Window {
-        Telegram: {
+        Telegram?: {
             Login: {
-                auth: (
-                    options: TelegramLoginOptions,
+                init: (
+                    options: {
+                        client_id: number | string;
+                        request_access?: string | string[];
+                        lang?: string;
+                    },
                     callback: (data: TelegramAuthResult) => void,
                 ) => void;
             };
@@ -35,42 +26,63 @@ declare global {
     }
 }
 
+const SCRIPT_ID = "telegram-login-script";
+
 export default function TelegramLogin() {
     useEffect(() => {
-        const script = document.createElement("script");
-        script.src = "https://oauth.telegram.org/js/telegram-login.js";
-        script.async = true;
-        document.body.appendChild(script);
-    }, []);
+        const handleAuth = (data: TelegramAuthResult) => {
+            if (!data || data.error) {
+                console.error("Ошибка входа:", data?.error);
+                return;
+            }
 
-    const handleLogin = () => {
-        if (!window.Telegram?.Login) {
-            console.error("Telegram-скрипт ещё не загрузился, попробуйте снова");
+            fetch(
+                "https://todo-backend-sigma-five.vercel.app/api/auth/telegram",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ idToken: data.id_token }),
+                },
+            )
+                .then((res) => res.json())
+                .then((result) => console.log("Ответ бэка:", result))
+                .catch((err) => console.error(err));
+        };
+
+        // init навешивает стили на .tg-auth-button и включает обработку кликов.
+        const initWidget = () => {
+            window.Telegram?.Login.init(
+                { client_id: CLIENT_ID, request_access: "write" },
+                handleAuth,
+            );
+        };
+
+        // Скрипт уже был загружен ранее (напр. при повторном рендере) —
+        // просто переинициализируем виджет с актуальным колбэком.
+        if (window.Telegram?.Login) {
+            initWidget();
             return;
         }
 
-        window.Telegram.Login.auth(
-            { client_id: CLIENT_ID, scope: ["profile"] },
-            (data) => {
-                if (!data || data.error) {
-                    console.error("Ошибка входа:", data?.error);
-                    return;
-                }
+        const existing = document.getElementById(
+            SCRIPT_ID,
+        ) as HTMLScriptElement | null;
+        if (existing) {
+            existing.addEventListener("load", initWidget);
+            return () => existing.removeEventListener("load", initWidget);
+        }
 
-                fetch(
-                    "https://todo-backend-sigma-five.vercel.app/api/auth/telegram",
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ idToken: data.id_token }),
-                    },
-                )
-                    .then((res) => res.json())
-                    .then((result) => console.log("Ответ бэка:", result))
-                    .catch((err) => console.error(err));
-            },
-        );
-    };
+        const script = document.createElement("script");
+        script.id = SCRIPT_ID;
+        script.src = "https://oauth.telegram.org/js/telegram-login.js?5";
+        script.async = true;
+        script.onload = initWidget;
+        document.body.appendChild(script);
+    }, []);
 
-    return <button onClick={handleLogin}>Sign In with Telegram</button>;
+    return (
+        <button className="tg-auth-button" data-style="icon shine">
+            Sign In with Telegram
+        </button>
+    );
 }
