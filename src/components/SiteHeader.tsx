@@ -14,7 +14,7 @@ export default function SiteHeader() {
                         level={1}
                         className="text-base font-semibold"
                     >
-                        Список дел
+                        Todo-list
                     </Typography.Heading>
                 </div>
 
