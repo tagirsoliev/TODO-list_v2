@@ -32,20 +32,21 @@ declare global {
 const SCRIPT_ID = "telegram-login-script";
 
 export default function TelegramLogin() {
-    const { setAuth } = useAuth();
+    const { setAuth, setAuthError } = useAuth();
 
     useEffect(() => {
         const handleAuth = (data: TelegramAuthResult) => {
             if (!data || data.error) {
-                console.error("Ошибка входа:", data?.error);
+                setAuthError(data?.error ?? "Telegram не вернул данные входа");
                 return;
             }
 
             api("/auth/telegram", "POST", undefined, { idToken: data.id_token })
-                .then((result) =>
-                    setAuth({ token: result.accessToken, user: result.user }),
-                )
-                .catch((err) => console.error(err));
+                .then((result) => {
+                    setAuthError(null);
+                    setAuth({ token: result.accessToken, user: result.user });
+                })
+                .catch((err) => setAuthError(err.message));
         };
 
         // init навешивает стили на .tg-auth-button и включает обработку кликов.
@@ -79,7 +80,7 @@ export default function TelegramLogin() {
         script.async = true;
         script.onload = initWidget;
         document.body.appendChild(script);
-    }, [setAuth]);
+    }, [setAuth, setAuthError]);
 
     return (
         <button className="tg-auth-button" data-style="icon shine">

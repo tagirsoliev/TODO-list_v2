@@ -5,20 +5,19 @@ import TaskForm from "@/components/TaskForm";
 import TasksList from "@/components/TasksList";
 import Loader from "@/components/Loader";
 import ErrorAlert from "@/components/ErrorAlert";
-import api from "@/lib/api/api";
+import { getTasks, createTask, completeTask } from "@/lib/api/tasks";
 import useAuth from "./hooks/useAuth";
 
 export default function Home() {
     const [error, setError] = useState<string | null>(null);
     // null — ещё не загружали, [] — загрузили и пусто.
     const [tasks, setTasks] = useState<Task[] | null>(null);
-    const { token, user } = useAuth();
+    const { token, user, users, authError, setAuthError } = useAuth();
     const isLoading = token !== null && tasks === null && error === null;
-
 
     const loadTasks = useCallback(() => {
         if (!token) return;
-        api("/tasks", "GET", { Authorization: `Bearer ${token}` })
+        getTasks(token)
             .then((result) => {
                 setError(null);
                 setTasks(result);
@@ -30,32 +29,34 @@ export default function Home() {
         loadTasks();
     }, [loadTasks]);
 
-    const authHeader = { Authorization: `Bearer ${token}` };
-
-    const addTask = (text: string) => {
-        api("/tasks", "POST", authHeader, { text })
+    // Общий каркас мутации: сбросить ошибку → запрос → перечитать список →
+    // показать ошибку, если что. token сюда доходит уже гарантированно.
+    const run = (action: (t: string) => Promise<unknown>) => {
+        if (!token) return;
+        setError(null);
+        action(token)
             .then(loadTasks)
             .catch((err) => setError(err.message));
     };
 
-    // PATCH :id/done необратим, так что выполненная задача уходит насовсем.
-    const completeTask = (id: number) => {
-        api(`/tasks/${id}/done`, "PATCH", authHeader)
-            .then(loadTasks)
-            .catch((err) => setError(err.message));
-    };
-
-    const deleteTask = (id: number) => {
-        api(`/tasks/${id}`, "DELETE", authHeader)
-            .then(loadTasks)
-            .catch((err) => setError(err.message));
-    };
+    const addTask = (text: string, ownerTelegramId?: number) =>
+        run((t) => createTask(t, text, ownerTelegramId));
+    const markDone = (id: number) => run((t) => completeTask(t, id));
 
     if (!token || !user) {
         return (
-            <p className="py-6 text-center text-sm text-foreground/60">
-                Войдите через Telegram, чтобы увидеть свои задачи.
-            </p>
+            <main className="flex flex-col gap-6">
+                {authError && (
+                    <ErrorAlert
+                        message={authError}
+                        onClose={() => setAuthError(null)}
+                    />
+                )}
+
+                <p className="py-6 text-center text-sm text-foreground/60">
+                    Войдите через Telegram, чтобы увидеть свои задачи.
+                </p>
+            </main>
         );
     }
 
@@ -65,17 +66,12 @@ export default function Home() {
                 <ErrorAlert message={error} onClose={() => setError(null)} />
             )}
 
-            <TaskForm onAdd={addTask} />
+            <TaskForm users={users} meId={user.telegramId} onAdd={addTask} />
 
             {isLoading ? (
                 <Loader />
             ) : (
-                <TasksList
-                    tasks={tasks ?? []}
-                    meId={user.telegramId}
-                    completeTask={completeTask}
-                    deleteTask={deleteTask}
-                />
+                <TasksList tasks={tasks ?? []} completeTask={markDone} />
             )}
         </main>
     );
