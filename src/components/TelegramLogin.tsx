@@ -18,8 +18,9 @@ declare global {
                 init: (
                     options: {
                         client_id: number | string;
-                        request_access?: string | string[];
+                        scope?: string[];
                         lang?: string;
+                        nonce?: string;
                     },
                     callback: (data: TelegramAuthResult) => void,
                 ) => void;
@@ -48,9 +49,11 @@ export default function TelegramLogin() {
         };
 
         // init навешивает стили на .tg-auth-button и включает обработку кликов.
+        // Скоуп profile обязателен: без него в id_token не будет клейма id,
+        // а бэкенд ищет пользователя в белом списке именно по нему.
         const initWidget = () => {
             window.Telegram?.Login.init(
-                { client_id: CLIENT_ID, request_access: "write" },
+                { client_id: CLIENT_ID, scope: ["profile", "write"] },
                 handleAuth,
             );
         };
