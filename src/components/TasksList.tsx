@@ -1,104 +1,66 @@
-import { Button, Card, Chip } from "@heroui/react";
+import { Button, Card } from "@heroui/react";
 import type { Task } from "@/types/types";
-// import api from "@/lib/api/api";
-
-const typeLabels: Record<string, string> = {
-    work: "Работа",
-    study: "Учёба",
-    personal: "Личное",
-};
 
 interface TasksListProps {
     tasks: Task[];
-    filter: string;
-    type: string;
+    meId: number;
+    completeTask: (id: number) => void;
     deleteTask: (id: number) => void;
-    changeStatus: (id: number) => void;
 }
 
 interface TaskItemProps {
-    id: number;
-    value: string;
-    type: string;
-    isDone: boolean;
+    task: Task;
+    meId: number;
+    completeTask: (id: number) => void;
     deleteTask: (id: number) => void;
-    changeStatus: (id: number) => void;
 }
 
-function TaskItem({ id, value, type, isDone, deleteTask, changeStatus }: TaskItemProps) {
+function TaskItem({ task, meId, completeTask, deleteTask }: TaskItemProps) {
     return (
         <Card className="flex-row items-center justify-between gap-4 p-4">
-            <div className="flex min-w-0 items-center gap-3">
-                <span
-                    className={
-                        isDone
-                            ? "truncate text-foreground/50 line-through"
-                            : "truncate"
-                    }
-                >
-                    {value}
-                </span>
-                {type && (
-                    <Chip size="sm" color="accent" className="shrink-0">
-                        {typeLabels[type] ?? type}
-                    </Chip>
-                )}
-            </div>
+            <span className="min-w-0 truncate">{task.text}</span>
             <div className="flex shrink-0 gap-2">
-                <Button
-                    size="sm"
-                    variant={isDone ? "secondary" : "primary"}
-                    onPress={() => changeStatus(id)}
-                >
-                    {isDone ? "Выполнено" : "Выполнить"}
+                <Button size="sm" onPress={() => completeTask(task.id)}>
+                    Выполнить
                 </Button>
-                <Button
-                    size="sm"
-                    variant="danger-soft"
-                    onPress={() => deleteTask(id)}
-                >
-                    Удалить
-                </Button>
+                {/* DELETE разрешён только автору — чужая задача дала бы 404. */}
+                {task.authorId === meId && (
+                    <Button
+                        size="sm"
+                        variant="danger-soft"
+                        onPress={() => deleteTask(task.id)}
+                    >
+                        Удалить
+                    </Button>
+                )}
             </div>
         </Card>
     );
 }
 
-export default function TasksList({ tasks, filter, type, deleteTask, changeStatus }: TasksListProps) {
-
-    // const res = api("https://todo-backend-sigma-five.vercel.app/api/tasks", "GET", `Authorization: Bearer`)
-
-    const filteredTasks =
-        filter === "completed"
-            ? tasks.filter((task) => task.isDone === true)
-            : filter === "uncompleted"
-                ? tasks.filter((task) => task.isDone === false)
-                : tasks;
-
-    const displayedTasks =
-        type === "work" || type === "study" || type === "personal"
-            ? filteredTasks.filter((task) => task.type === type)
-            : filteredTasks;
-
-    if (displayedTasks.length === 0) {
+export default function TasksList({
+    tasks,
+    meId,
+    completeTask,
+    deleteTask,
+}: TasksListProps) {
+    if (tasks.length === 0) {
         return (
             <p className="py-6 text-center text-sm text-foreground/60">
-                Нет задач, соответствующих фильтру.
+                Невыполненных задач нет.
             </p>
         );
     }
 
     return (
         <div className="flex w-full flex-col gap-3">
-            {displayedTasks.map((task) => (
+            {tasks.map((task) => (
                 <TaskItem
                     key={task.id}
-                    id={task.id}
-                    value={task.value}
-                    type={task.type}
-                    isDone={task.isDone}
+                    task={task}
+                    meId={meId}
+                    completeTask={completeTask}
                     deleteTask={deleteTask}
-                    changeStatus={changeStatus}
                 />
             ))}
         </div>

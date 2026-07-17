@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
-import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/app/components/SiteHeader";
+import SiteFooter from "@/app/components/SiteFooter";
+import AuthProvider from "./components/AuthProvider";
+import SessionScope from "./components/SessionScope";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -38,11 +40,13 @@ export default function RootLayout({
                     defaultTheme="system"
                     disableTransitionOnChange
                 >
-                    <SiteHeader />
-                    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
-                        {children}
-                    </div>
-                    <SiteFooter />
+                    <AuthProvider>
+                        <SiteHeader />
+                        <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
+                            <SessionScope>{children}</SessionScope>
+                        </div>
+                        <SiteFooter />
+                    </AuthProvider>
                 </ThemeProvider>
             </body>
         </html>

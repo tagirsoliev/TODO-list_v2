@@ -1,75 +1,82 @@
 "use client";
-import { useState } from "react";
-import useLocalStorage from "./hooks/useLocalStorage";
-import { TaskDraft } from "../types/types";
-import TasksStats from "@/components/TasksStats";
+import { useCallback, useEffect, useState } from "react";
+import { Task } from "../types/types";
 import TaskForm from "@/components/TaskForm";
-import SelectField from "@/components/SelectField";
 import TasksList from "@/components/TasksList";
-import { Button } from "@heroui/react";
-import { FILTER_OPTIONS, TYPE_FILTER_OPTIONS } from "@/constants/constants";
+import Loader from "@/components/Loader";
+import ErrorAlert from "@/components/ErrorAlert";
+import api from "@/lib/api/api";
+import useAuth from "./hooks/useAuth";
 
 export default function Home() {
-    const [tasks, setTasks] = useLocalStorage("tasks", []);
-    const [filter, setFilter] = useState<string>("");
-    const [type, setType] = useState<string>("");
+    const [error, setError] = useState<string | null>(null);
+    // null — ещё не загружали, [] — загрузили и пусто.
+    const [tasks, setTasks] = useState<Task[] | null>(null);
+    const { token, user } = useAuth();
+    const isLoading = token !== null && tasks === null && error === null;
 
-    const addTask = (task: TaskDraft) => {
-        setTasks((prev) => [...prev, { ...task, id: Date.now() }]);
+
+    const loadTasks = useCallback(() => {
+        if (!token) return;
+        api("/tasks", "GET", { Authorization: `Bearer ${token}` })
+            .then((result) => {
+                setError(null);
+                setTasks(result);
+            })
+            .catch((err) => setError(err.message));
+    }, [token]);
+
+    useEffect(() => {
+        loadTasks();
+    }, [loadTasks]);
+
+    const authHeader = { Authorization: `Bearer ${token}` };
+
+    const addTask = (text: string) => {
+        api("/tasks", "POST", authHeader, { text })
+            .then(loadTasks)
+            .catch((err) => setError(err.message));
     };
 
-    const clearTasks = () => {
-        setTasks([]);
+    // PATCH :id/done необратим, так что выполненная задача уходит насовсем.
+    const completeTask = (id: number) => {
+        api(`/tasks/${id}/done`, "PATCH", authHeader)
+            .then(loadTasks)
+            .catch((err) => setError(err.message));
     };
 
     const deleteTask = (id: number) => {
-        setTasks((prev) => prev.filter((task) => task.id !== id));
+        api(`/tasks/${id}`, "DELETE", authHeader)
+            .then(loadTasks)
+            .catch((err) => setError(err.message));
     };
 
-    const changeStatus = (id: number) => {
-        setTasks((prev) =>
-            prev.map((task) =>
-                task.id === id ? { ...task, isDone: !task.isDone } : task,
-            ),
+    if (!token || !user) {
+        return (
+            <p className="py-6 text-center text-sm text-foreground/60">
+                Войдите через Telegram, чтобы увидеть свои задачи.
+            </p>
         );
-    };
+    }
 
     return (
         <main className="flex flex-col gap-6">
-            <TasksStats tasks={tasks} />
+            {error && (
+                <ErrorAlert message={error} onClose={() => setError(null)} />
+            )}
 
             <TaskForm onAdd={addTask} />
 
-            <div className="flex flex-col gap-3 sm:flex-row">
-                {/* Filters */}
-                <SelectField
-                    aria-label="Фильтр по статусу"
-                    className="sm:flex-1"
-                    items={FILTER_OPTIONS}
-                    value={filter}
-                    onChange={setFilter}
+            {isLoading ? (
+                <Loader />
+            ) : (
+                <TasksList
+                    tasks={tasks ?? []}
+                    meId={user.telegramId}
+                    completeTask={completeTask}
+                    deleteTask={deleteTask}
                 />
-
-                <SelectField
-                    aria-label="Фильтр по типу"
-                    className="sm:flex-1"
-                    items={TYPE_FILTER_OPTIONS}
-                    value={type}
-                    onChange={setType}
-                />
-            </div>
-
-            <TasksList
-                tasks={tasks}
-                filter={filter}
-                type={type}
-                deleteTask={deleteTask}
-                changeStatus={changeStatus}
-            />
-
-            <Button variant="outline" onPress={clearTasks}>
-                Очистить всё
-            </Button>
+            )}
         </main>
     );
 }

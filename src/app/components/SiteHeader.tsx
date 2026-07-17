@@ -1,6 +1,6 @@
 import { Header, Typography } from "@heroui/react";
-import ThemeSwitch from "./ThemeSwitch";
-import TelegramLogin from "./TelegramLogin";
+import ThemeSwitch from "../../components/ThemeSwitch";
+import TelegramLogin from "../../components/TelegramLogin";
 
 export default function SiteHeader() {
     return (

@@ -1,21 +1,19 @@
 "use client";
 import { useState } from "react";
 import { Button, Card, Input } from "@heroui/react";
-import SelectField from "./SelectField";
-import { DEFAULT_TASK, TASK_TYPE_OPTIONS } from "@/constants/constants";
-import type { TaskDraft } from "@/types/types";
 
 interface TaskFormProps {
-    onAdd: (task: TaskDraft) => void;
+    onAdd: (text: string) => void;
 }
 
 export default function TaskForm({ onAdd }: TaskFormProps) {
-    const [form, setForm] = useState<TaskDraft>(DEFAULT_TASK);
+    const [text, setText] = useState<string>("");
 
     const handleAdd = () => {
-        if (form.value.trim() === "") return;
-        onAdd(form);
-        setForm(DEFAULT_TASK);
+        const trimmed = text.trim();
+        if (trimmed === "") return;
+        onAdd(trimmed);
+        setText("");
     };
 
     return (
@@ -23,31 +21,15 @@ export default function TaskForm({ onAdd }: TaskFormProps) {
             <Card.Header>
                 <Card.Title>Новая задача</Card.Title>
             </Card.Header>
-            <Card.Content className="flex flex-col gap-3">
+            <Card.Content className="flex flex-col gap-3 sm:flex-row">
                 <Input
+                    className="sm:flex-1"
                     placeholder="Введите дело"
-                    value={form.value}
-                    onChange={(e) =>
-                        setForm((prev) => ({ ...prev, value: e.target.value }))
-                    }
+                    value={text}
+                    maxLength={2000}
+                    onChange={(e) => setText(e.target.value)}
                 />
-                <div className="flex flex-col gap-3 sm:flex-row">
-                    <SelectField
-                        aria-label="Тип задачи"
-                        className="sm:flex-1"
-                        items={TASK_TYPE_OPTIONS}
-                        value={form.type}
-                        onChange={(key) =>
-                            setForm((prev) => ({
-                                ...prev,
-                                type: key,
-                            }))
-                        }
-                    />
-                    <Button onPress={handleAdd} className="sm:flex-1">
-                        Добавить
-                    </Button>
-                </div>
+                <Button onPress={handleAdd}>Добавить</Button>
             </Card.Content>
         </Card>
     );

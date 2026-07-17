@@ -1,4 +1,6 @@
 "use client";
+import useAuth from "@/app/hooks/useAuth";
+import api from "@/lib/api/api";
 import { CLIENT_ID } from "@/constants/constants";
 import { useEffect } from "react";
 
@@ -29,6 +31,8 @@ declare global {
 const SCRIPT_ID = "telegram-login-script";
 
 export default function TelegramLogin() {
+    const { setAuth } = useAuth();
+
     useEffect(() => {
         const handleAuth = (data: TelegramAuthResult) => {
             if (!data || data.error) {
@@ -36,16 +40,10 @@ export default function TelegramLogin() {
                 return;
             }
 
-            fetch(
-                "https://todo-backend-sigma-five.vercel.app/api/auth/telegram",
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ idToken: data.id_token }),
-                },
-            )
-                .then((res) => res.json())
-                .then((result) => console.log("Ответ бэка:", result))
+            api("/auth/telegram", "POST", undefined, { idToken: data.id_token })
+                .then((result) =>
+                    setAuth({ token: result.accessToken, user: result.user }),
+                )
                 .catch((err) => console.error(err));
         };
 
@@ -78,7 +76,7 @@ export default function TelegramLogin() {
         script.async = true;
         script.onload = initWidget;
         document.body.appendChild(script);
-    }, []);
+    }, [setAuth]);
 
     return (
         <button className="tg-auth-button" data-style="icon shine">
