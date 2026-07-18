@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
+import { Toast } from "@heroui/react";
 import SiteHeader from "@/app/components/SiteHeader";
 import SiteFooter from "@/app/components/SiteFooter";
 import AuthProvider from "./components/AuthProvider";
@@ -46,6 +47,7 @@ export default function RootLayout({
                             <SessionScope>{children}</SessionScope>
                         </div>
                         <SiteFooter />
+                        <Toast.Provider placement="bottom end" />
                     </AuthProvider>
                 </ThemeProvider>
             </body>

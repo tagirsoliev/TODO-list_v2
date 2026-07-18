@@ -6,6 +6,7 @@ import TasksList from "@/components/TasksList";
 import Loader from "@/components/Loader";
 import ErrorAlert from "@/components/ErrorAlert";
 import { getTasks, createTask, completeTask } from "@/lib/api/tasks";
+import { toast } from "@heroui/react";
 import useAuth from "./hooks/useAuth";
 
 export default function Home() {
@@ -29,18 +30,33 @@ export default function Home() {
         loadTasks();
     }, [loadTasks]);
 
-    // Общий каркас мутации: сбросить ошибку → запрос → перечитать список →
-    // показать ошибку, если что. token сюда доходит уже гарантированно.
-    const run = (action: (t: string) => Promise<unknown>) => {
-        if (!token) return;
+    // Общий каркас мутации: сбросить ошибку → запрос → перечитать список.
+    // Возвращает true при успехе — вызывающий чистит форму/снимает блокировку.
+    const run = (action: (t: string) => Promise<unknown>): Promise<boolean> => {
+        if (!token) return Promise.resolve(false);
         setError(null);
-        action(token)
-            .then(loadTasks)
-            .catch((err) => setError(err.message));
+        return action(token)
+            .then(() => {
+                loadTasks();
+                return true;
+            })
+            .catch((err) => {
+                setError(err.message);
+                return false;
+            });
     };
 
     const addTask = (text: string, ownerTelegramId?: number) =>
-        run((t) => createTask(t, text, ownerTelegramId));
+        run((t) =>
+            createTask(t, text, ownerTelegramId).then(() => {
+                if (ownerTelegramId) {
+                    const name =
+                        users.find((u) => u.telegramId === ownerTelegramId)
+                            ?.name ?? "получателю";
+                    toast.success(`Назначено: ${name}`);
+                }
+            }),
+        );
     const markDone = (id: number) => run((t) => completeTask(t, id));
 
     if (!token || !user) {
@@ -71,7 +87,12 @@ export default function Home() {
             {isLoading ? (
                 <Loader />
             ) : (
-                <TasksList tasks={tasks ?? []} completeTask={markDone} />
+                <TasksList
+                    tasks={tasks ?? []}
+                    users={users}
+                    meId={user.telegramId}
+                    completeTask={markDone}
+                />
             )}
         </main>
     );
